@@ -1,0 +1,5 @@
+##############key(键)###########################
+1.del key1[,ke2,...]:删除一个或者多个key，不存在的key可忽略,返回值代表操作成功的记录数
+2.dump key:序列化一个key
+3.RESTORE key-again 10000 "\x00\tweihuanbo\x06\x00\xf4Z\xd3$\xae$\x89\xbf"：为新key赋值为序列化时的值，并设置ttl的时间,如果为0则不设置过期时间4.exists key:验证key是否存在
+5.
