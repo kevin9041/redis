@@ -2,14 +2,16 @@
 1.del key1[,ke2,...]:删除一个或者多个key，不存在的key可忽略,返回值代表操作成功的记录数
 2.dump key:序列化一个key
 3.RESTORE key-again 10000 "\x00\tweihuanbo\x06\x00\xf4Z\xd3$\xae$\x89\xbf"：为新key赋值为序列化时的值，并设置ttl的时间,如果为0则不设置过期时间4.exists key:验证key是否存在
-5.EXPIRE cache_page 30: 设置key过期时间为 30 秒
-6.EXPIREAT key 1355292000:设置时间戳格式的过期时间
-7.keys pattern:查找所有符合给定模式pattern的key
+5.EXPIRE key 30: 设置key过期时间为 30 秒，以秒为单位
+6.PEXPIRE key milliseconds：和 EXPIRE 命令的作用类似，但是它以毫秒为单位设置 key 的生存时间
+7.EXPIREAT key 1355292000:设置UNIX时间戳格式的过期时间
+8.PEXPIREAT key milliseconds-timestamp:和 EXPIREAT 命令类似，但它以毫秒为单位设置 key 的过期 unix 时间戳
+9.keys pattern:查找所有符合给定模式pattern的key
 	KEYS * 匹配数据库中所有 key 
 	KEYS h?llo 匹配 hello ， hallo 和 hxllo 等
 	KEYS h*llo 匹配 hllo 和 heeeeello 等
 	KEYS h[ae]llo 匹配 hello 和 hallo ，但不匹配 hillo 
-8.MIGRATE host port key destination-db timeout [COPY] [REPLACE]：
+10.MIGRATE host port key destination-db timeout [COPY] [REPLACE]：
 	将 key 原子性地从当前实例传送到目标实例的指定数据库上，一旦传送成功， key 保证会出现在目标实例上，而当前实例上的 key 会被删除
 	这个命令是一个原子操作，它在执行的时候会阻塞进行迁移的两个实例，直到以下任意结果发生：迁移成功，迁移失败，等到超时
 	当IOERR发生时，有以下两种情况：
@@ -19,5 +21,56 @@
 	可选项：
 		copy：不移除源实例上的key
 		replace：替换目标实例上已存在的key
+11.move key db：将当前数据库的 key 移动到给定的数据库 db 当中，当目标数据库存在相同的key则移动失败
+12.OBJECT subcommand key：OBJECT 命令允许从内部察看给定 key 的 Redis 对象
+	REFCOUNT 和 IDLETIME 返回数字
+	ENCODING 返回相应的编码类型
+13.PERSIST key：移除给定 key 的生存时间，将这个 key 从『易失的』(带生存时间 key )转换成『持久的』(一个不带生存时间、永不过期的 key )
+14.TTL key:以秒为单位，返回给定 key 的剩余生存时间(TTL, time to live)
+15.PTTL key ：类似于 TTL 命令，但它以毫秒为单位返回 key 的剩余生存时间
+16.RANDOMKEY： 从当前数据库中随机返回(不删除)一个 key 
+17.RENAME key newkey：将 key 改名为 newkey
+	当 key 和 newkey 相同，或者 key 不存在时，返回一个错误
+	当 newkey 已经存在时， RENAME 命令将覆盖旧值
+18.RENAMENX key newkey:当且仅当 newkey 不存在时，将 key 改名为 newkey,当 key 不存在时，返回一个错误
+19.RESTORE key ttl serialized-value:反序列化给定的序列化值，并将它和给定的 key 关联,参数 ttl 以毫秒为单位为 key 设置生存时间；如果 ttl 为 0 ，那么不设置生存时间
+	RESTORE 在执行反序列化之前会先对序列化值的 RDB 版本和数据校验和进行检查，如果 RDB 版本不相同或者数据不完整的话，那么 RESTORE 会拒绝进行反序列化，并返回一个错误
+20.SORT key [BY pattern] [LIMIT offset count] [GET pattern [GET pattern ...]] [ASC | DESC] [ALPHA] [STORE destination]:
+	最简单的 SORT 使用方法是 SORT key 和 SORT key DESC
+	SORT 命令默认排序对象为数字， 当需要对字符串进行排序时， 需要显式地在 SORT 命令之后添加 ALPHA 修饰符
+	排序之后返回元素的数量可以通过 LIMIT 修饰符进行限制， 修饰符接受 offset 和 count 两个参数
+	通过使用 BY 选项，可以让 key 按其他pattern键来排序(SORT uid BY user_level_*)
+	使用 GET 选项， 可以根据排序的结果来取出相应的键值(SORT uid GET user_name_*)
+	组合使用 BY 和 GET,先按 user_level_{uid} 来排序 uid 列表， 再取出相应的 user_name_{uid} 的值(SORT uid BY user_level_* GET user_name_*)
+	获取多个外部键,按 uid 分别获取 user_level_{uid} 和 user_name_{uid}(SORT uid GET user_level_* GET user_name_*)
+	GET 有一个额外的参数规则，那就是 —— 可以用 # 获取被排序键的值(SORT uid GET # GET user_level_* GET user_name_*)
+	通过将一个不存在的键作为参数传给 BY 选项， 可以让 SORT 跳过排序操作， 直接返回结果(SORT uid BY not-exists-key),通过将这种用法和 GET 选项配合， 就可以在不排序的情况下， 获取多个外部键， 相当于执行一个整合的获取操作（类似于 SQL 数据库的 join 关键字）(SORT uid BY not-exists-key GET # GET user_level_* GET user_name_*)
+	可以不将用户的名字和级别保存在 user_name_{uid} 和 user_level_{uid} 两个字符串键中， 而是用一个带有 name 域和 level 域的哈希表 user_info_{uid} 来保存用户的名字和级别信息(HMSET user_info_1 name admin level 9999),之后， BY 和 GET 选项都可以用 key->field 的格式来获取哈希表中的域的值， 其中 key 表示哈希表键， 而 field 则表示哈希表的域(SORT uid BY user_info_*->level GET user_info_*->name)
+	保存排序结果(SORT numbers STORE sorted-numbers),可以通过将 SORT 命令的执行结果保存，并用 EXPIRE 为结果设置生存时间，以此来产生一个 SORT 操作的结果缓存。这样就可以避免对 SORT 操作的频繁调用：只有当结果集过期时，才需要再调用一次 SORT 操作,另外，为了正确实现这一用法，你可能需要加锁以避免多个客户端同时进行缓存重建(也就是多个客户端，同一时间进行 SORT 操作，并保存为结果集)，具体参见 SETNX 命令
+21.TYPE key:返回 key 所储存的值的类型(none (key不存在),string (字符串),list (列表),set (集合),zset (有序集),hash (哈希表))
+22.SCAN 命令返回的每个元素都是一个数据库键(scan 0 match *a* count 10)
+	SSCAN 命令返回的每个元素都是一个集合成员
+	HSCAN 命令返回的每个元素都是一个键值对，一个键值对由一个键和一个值组成
+	ZSCAN 命令返回的每个元素都是一个有序集合元素，一个有序集合元素由一个成员（member）和一个分值（score）组成
+	
+##############string(字符串)###########################
+1.APPEND key value：如果 key 已经存在并且是一个字符串， APPEND 命令将 value 追加到 key 原来的值的末尾，如果 key 不存在， APPEND 就简单地将给定 key 设为 value ，就像执行 SET key value 一样
+2.strlen key:获取key的长度
+3.SETRANGE key start value：可以用于覆盖或修改已存在的的时间序列
+4.getrange key start end：可以获取指定index范围的字符串(包括 start 和 end 在内)返回所有(一个或多个)给定 key 的值，
+5.DECR key：将 key 中储存的数字值减一，如果 key 不存在，那么 key 的值会先被初始化为 0 ，然后再执行 DECR 操作（此时已经有了key），如果值包含错误的类型，或字符串类型的值不能表示为数字，那么返回一个错误
+6.DECRBY key decrement：将 key 所储存的值减去减量 decrement，其他同上
+7.GET key：返回 key 所关联的字符串值，如果 key 不存在那么返回特殊值 nil，假如 key 储存的值不是字符串类型，返回一个错误，因为 GET 只能用于处理字符串值
+8.GETSET key value：将给定 key 的值设为 value ，并返回 key 的旧值(old value)，当 key 存在但不是字符串类型时，返回一个错误，当 key 不存在返回nil并且把新值关联给key
+	GETSET 可以和 INCR 组合使用，实现一个有原子性复位操作的计数器
+9.INCR key：将 key 中储存的数字值增一，如果 key 不存在，那么 key 的值会先被初始化为 0 ，然后再执行 INCR 操作（此时已经有了key），如果值包含错误的类型，或字符串类型的值不能表示为数字，那么返回一个错误
+	可以通过组合使用 INCR 和 EXPIRE ，来达到只在规定的生存时间内进行计数的目的
+10.INCRBY key increment：将 key 所储存的值加上增量 increment
+11.INCRBYFLOAT key increment：为 key 中所储存的值加上浮点数增量 increment，如果 key 不存在，那么 INCRBYFLOAT 会先将 key 的值设为 0 ，再执行加法操作（此时已经有了key）
+12.MGET key [key ...]：返回所有(一个或多个)给定 key 的值，如果给定的 key 里面，有某个 key 不存在，那么这个 key 返回特殊值 nil 。因此，该命令永不失败
+13.
 
+	
+	
+	
 
