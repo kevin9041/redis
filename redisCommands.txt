@@ -79,7 +79,7 @@
 17.PSETEX key milliseconds value:设置 key,并以毫秒为单位设置 key 的生存时间
 18.SETRANGE key offset value：用 value 参数覆写(overwrite)给定 key 所储存的字符串值，从偏移量 offset 开始
 
-##############stringHash（哈希表）###########################
+##############Hash（哈希表）###########################
 1.HDEL key field [field ...]：删除哈希表 key 中的一个或多个指定域，不存在的域将被忽略（返回值0）
 2.HEXISTS key field：查看哈希表 key 中，给定域 field 是否存在
 3.HSET key field value：将哈希表 key 中的域 field 的值设为 value，如果 key 不存在，一个新的哈希表被创建并进行 HSET 操作，如果域 field 已经存在于哈希表中，旧值将被覆盖
@@ -342,7 +342,6 @@
 	程序只要重复执行这段代码， 直到 EXEC 的返回值不是空多条回复（null multi-bulk reply）即可
 	
 2.SUBSCRIBE 、 UNSUBSCRIBE 和 PUBLISH 三个命令实现了发布与订阅信息泛型（Publish/Subscribe messaging paradigm）， 在这个实现中， 发送者（发送信息的客户端）不是将信息直接发送给特定的接收者（接收信息的客户端）， 而是将信息发送给频道（channel）， 然后由频道将信息转发给所有对这个频道感兴趣的订阅者
-3.	
 
 
 

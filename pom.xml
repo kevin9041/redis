@@ -23,9 +23,9 @@
   <modelVersion>4.0.0</modelVersion>
   <packaging>war</packaging>
 
-  <name>jedis</name>
+  <name>redis</name>
   <groupId>com.movitech.redis</groupId>
-  <artifactId>jedis</artifactId>
+  <artifactId>redis</artifactId>
   <version>1.0-SNAPSHOT</version>
 
   <dependencies>

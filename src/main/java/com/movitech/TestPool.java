@@ -11,7 +11,6 @@ public class TestPool {
 
 		System.out.println(jedisPool == jedisPool2);
 
-
 		Jedis jedis = null;
 		try {
 			jedis = jedisPool.getResource();

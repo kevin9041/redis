@@ -3,10 +3,13 @@ package com.movitech;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.Transaction;
 
-public class TestTX {
+public class TestTransaction {
 	public boolean transMethod() throws InterruptedException {
-	     Jedis jedis = new Jedis("127.0.0.1", 6379);
-	     //Jedis jedis = new Jedis("192.168.56.102", 6379);
+	     //Jedis jedis = new Jedis("127.0.0.1", 6379);
+	     Jedis jedis = new Jedis("192.168.56.102", 6379);
+	     jedis.set("balance","1000");
+	     jedis.set("debt","0");
+
 	     int balance;// 可用余额
 	     int debt;// 欠额
 	     int amtToSubtract = 10;// 实刷额度
@@ -18,9 +21,12 @@ public class TestTX {
 	     if (balance < amtToSubtract) {
 	       jedis.unwatch();
 	       System.out.println("modify");
+
+	       jedis.del("balance");
+	       jedis.del("debt");
 	       return false;
 	     } else {
-	       System.out.println("***********transaction");
+	       System.out.println("****transaction****");
 	       Transaction transaction = jedis.multi();
 	       transaction.decrBy("balance", amtToSubtract);
 	       transaction.incrBy("debt", amtToSubtract);
@@ -28,8 +34,11 @@ public class TestTX {
 	       balance = Integer.parseInt(jedis.get("balance"));
 	       debt = Integer.parseInt(jedis.get("debt"));
 
-	       System.out.println("*******" + balance);
-	       System.out.println("*******" + debt);
+	       System.out.println("***balance***" + balance);
+	       System.out.println("***debt***" + debt);
+
+	       jedis.del("balance");
+	       jedis.del("debt");
 	       return true;
 	     }
 	  }
@@ -45,7 +54,7 @@ public class TestTX {
 	 * @throws InterruptedException 
 	   */
 	  public static void main(String[] args) throws InterruptedException {
-	     TestTX test = new TestTX();
+	     TestTransaction test = new TestTransaction();
 	     boolean retValue = test.transMethod();
 	     System.out.println("main retValue-------: " + retValue);
 	  }	

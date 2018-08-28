@@ -22,8 +22,8 @@ public class JedisPoolUtil {
 					poolConfig.setMaxWait(100*1000);
 					poolConfig.setTestOnBorrow(true);
 
-					jedisPool = new JedisPool(poolConfig,"127.0.0.1",6379);
-					//jedisPool = new JedisPool(poolConfig,"192.168.56.102",6379);
+					//jedisPool = new JedisPool(poolConfig,"127.0.0.1",6379);
+					jedisPool = new JedisPool(poolConfig,"192.168.56.102",6379);
 				}
 			}
 		}
