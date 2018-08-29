@@ -2,7 +2,7 @@
 ##############key(键)###########################
 1.del key1[,ke2,...]:删除一个或者多个key，不存在的key可忽略,返回值代表操作成功的记录数
 2.dump key:序列化一个key
-3.RESTORE key-again 	 "\x00\tweihuanbo\x06\x00\xf4Z\xd3$\xae$\x89\xbf"：为新key赋值为序列化时的值，并设置ttl(毫秒为单位)的时间,如果为0则不设置过期时间
+3.RESTORE key-again ttl "\x00\tweihuanbo\x06\x00\xf4Z\xd3$\xae$\x89\xbf"：为新key赋值为序列化时的值，并设置ttl(毫秒为单位)的时间,如果为0则不设置过期时间
 4.exists key:验证key是否存在
 5.EXPIRE key 30: 设置key过期时间为 30 秒，以秒为单位
 6.PEXPIRE key milliseconds：和 EXPIRE 命令的作用类似，但是它以毫秒为单位设置 key 的生存时间
@@ -14,6 +14,7 @@
 	KEYS h*llo 匹配 hllo 和 heeeeello 等
 	KEYS h[ae]llo 匹配 hello 和 hallo ，但不匹配 hillo 
 10.MIGRATE host port key destination-db timeout [COPY] [REPLACE]：
+    timeout 参数以毫秒为格式
 	将 key 原子性地从当前实例传送到目标实例的指定数据库上，一旦传送成功， key 保证会出现在目标实例上，而当前实例上的 key 会被删除
 	这个命令是一个原子操作，它在执行的时候会阻塞进行迁移的两个实例，直到以下任意结果发生：迁移成功，迁移失败，等到超时
 	当IOERR发生时，有以下两种情况：
